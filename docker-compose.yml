@@ -1,0 +1,58 @@
+version: '3.8'
+
+services:
+  user_service:
+    build:
+      context: ./user_service
+      dockerfile: Dockerfile
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - ./user_service:/app
+    ports:
+      - "8001:8000"
+    env_file:
+      - ./user_service/.env
+    depends_on:
+      - db_user_service
+
+  product_service:
+    build:
+      context: ./product_service
+      dockerfile: Dockerfile
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - ./product_service:/app
+    ports:
+      - "8002:8000"
+    env_file:
+      - ./product_service/.env
+    depends_on:
+      - db_product_service
+
+  db_user_service:
+    image: postgres:14
+    container_name: db_user_service
+    environment:
+      POSTGRES_DB: user_db
+      POSTGRES_USER: user_db_user
+      POSTGRES_PASSWORD: user_db_password
+    volumes:
+      - user_db_data:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+
+  db_product_service:
+    image: postgres:14
+    container_name: db_product_service
+    environment:
+      POSTGRES_DB: product_db
+      POSTGRES_USER: product_db_user
+      POSTGRES_PASSWORD: product_db_password
+    volumes:
+      - product_db_data:/var/lib/postgresql/data
+    ports:
+      - "5434:5432"
+
+volumes:
+  user_db_data:
+  product_db_data:
