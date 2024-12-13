@@ -3,19 +3,12 @@ version: '3.8'
 services:
   user_service:
     build:
-      context: ./user_service
+      context: .
+      dockerfile: Dockerfile
     ports:
       - "8000:8000"
     environment:
       - ZMQ_PORT=5555
-    depends_on:
-      - database
-
-  product_service:
-    build:
-      context: ./product_service
-    ports:
-      - "8001:8001"
     depends_on:
       - database
 
@@ -24,14 +17,9 @@ services:
     environment:
       POSTGRES_USER: user
       POSTGRES_PASSWORD: password
-      POSTGRES_DB: global_db
+      POSTGRES_DB: user_service_db
     volumes:
       - postgres_data:/var/lib/postgresql/data
-
-  zmq_broker:
-    image: erikap/zeromq
-    ports:
-      - "5555:5555"
 
 volumes:
   postgres_data:

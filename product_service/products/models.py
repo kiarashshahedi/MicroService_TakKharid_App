@@ -1,9 +1,10 @@
 from django.db import models
-from users.models import MyUser
-from website import settings
+from user_service.users.models import MyUser
+from django.conf import settings
 import datetime
 from mptt.models import MPTTModel, TreeForeignKey
 from django.db.models import Avg
+import requests
 
 
 #--------------------------------------------------------------------------------------------------------
@@ -34,7 +35,8 @@ class Brand(models.Model):
 
 class Product(models.Model):
 
-    seller = models.ForeignKey('users.MyUser', on_delete=models.CASCADE, related_name='products')
+    seller = models.ForeignKey(MyUser, on_delete=models.CASCADE, related_name='products')
+    seller_id = models.PositiveIntegerField()  # Use ID instead of ForeignKey
     category = TreeForeignKey(Category, on_delete=models.SET_NULL, null=True, related_name='products')
     brand = models.ForeignKey(Brand, on_delete=models.SET_NULL, null=True)
     name = models.CharField(max_length=100)
@@ -51,6 +53,14 @@ class Product(models.Model):
     sale_price = models.DecimalField(default=0, max_digits=9, decimal_places=3)    
     icon = models.ImageField(upload_to='product_icons/', blank=True, null=True)  # Optional icon field
 
+    def get_seller(self):
+        # Ensure the seller_id exists in the model instance
+        if self.seller_id:
+            import requests
+            response = requests.get(f"{settings.USER_SERVICE_API_BASE}/users/{{user_id}}/")
+            return response.json()
+        return None
+    
     def update_ratings(self):
         reviews = self.reviews.exclude(rating__isnull=True)
         self.total_ratings = reviews.count()
@@ -78,10 +88,21 @@ class ProductImage(models.Model):
 class Review(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='reviews')
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    user_id = models.PositiveIntegerField()  # Use ID instead of ForeignKey
+
     rating = models.IntegerField(null=True, blank=True)  # Rating (1 to 5 stars)
     comment = models.TextField(null=True, blank=True)  # Comment text
     created_at = models.DateTimeField(auto_now_add=True)
 
+    # Method to fetch user information from user_service
+    def get_user(self):
+        # Ensure the user_id exists in the model instance
+        if self.user_id:
+            import requests
+            response = requests.get(f"{settings.USER_SERVICE_API_BASE}/users/{self.user_id}/")
+            return response.json()
+        return None
+    
     class Meta:
         unique_together = ('product', 'user')
 

@@ -258,3 +258,9 @@ AUTHENTICATION_BACKENDS = [
     'axes.backends.AxesStandaloneBackend',  # Updated Axes backend
     'django.contrib.auth.backends.ModelBackend',  # Default Django authentication backend
 ]
+
+# ZeroMQ
+ZMQ_SERVER_ADDRESS = "tcp://127.0.0.1:5555"
+ZMQ_CLIENT_ADDRESS = "tcp://127.0.0.1:5556"
+ZMQ_PORT = 5555
+USER_SERVICE_API_BASE = 'http://user-service/api'

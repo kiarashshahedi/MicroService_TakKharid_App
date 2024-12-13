@@ -41,13 +41,9 @@ INSTALLED_APPS = [
     'fernet_fields',
     # apps
     'products',
-    'users',
-    'orders',
-    'seller_panel',
-    'payments',
-    'dashboard',
-    'cart',
+    # 'user_service.users',
     'axes',  
+    'mptt'
 ]
 
 
@@ -258,3 +254,6 @@ AUTHENTICATION_BACKENDS = [
     'axes.backends.AxesStandaloneBackend',  # Updated Axes backend
     'django.contrib.auth.backends.ModelBackend',  # Default Django authentication backend
 ]
+
+USER_SERVICE_API_BASE = 'http://user-service/api'
+

@@ -10,6 +10,8 @@ from rest_framework.views import APIView
 from django.conf import settings
 from rest_framework.exceptions import PermissionDenied
 import requests
+# ZeroMQ
+from zeromq_client import validate_seller
 
 from .serializers import (
     ProductSerializer, CategorySerializer, ReviewSerializer, 
@@ -50,11 +52,12 @@ class AddProductView(generics.CreateAPIView):
 
     def perform_create(self, serializer):
         user = self.request.user
-        # Call user_service to validate seller
-        response = requests.get(f"{settings.USER_SERVICE_URL}/api/validate_seller/", params={'user_id': user.id})
-        if response.status_code != 200 or not response.json().get('is_valid', False):
-            raise PermissionDenied("Invalid seller or not verified.")
         
+        # Validate seller using ZeroMQ
+        validation_response = validate_seller(user.id)
+        if not validation_response.get("is_valid"):
+            raise PermissionDenied("Invalid seller or not verified.")
+
         serializer.save(seller=user)
 
 #-----------------------------------------------------------------------------------
@@ -67,6 +70,8 @@ class ProductUpdateView(generics.UpdateAPIView):
     def get_object(self):
         return get_object_or_404(Product, pk=self.kwargs["pk"], seller=self.request.user)
 
+    def get_queryset(self):
+        return Product.objects.filter(seller=self.request.user)
 #-----------------------------------------------------------------------------------
 
 class ProductDeleteView(generics.DestroyAPIView):
@@ -77,6 +82,8 @@ class ProductDeleteView(generics.DestroyAPIView):
     def get_object(self):
         return get_object_or_404(Product, pk=self.kwargs["pk"], seller=self.request.user)
 
+    def get_queryset(self):
+        return Product.objects.filter(seller=self.request.user)
 #-----------------------------------------------------------------------------------
 
 class AddReviewView(generics.CreateAPIView):
